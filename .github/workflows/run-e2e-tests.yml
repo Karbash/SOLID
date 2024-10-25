@@ -1,6 +1,7 @@
 name: run e2e tests
 
-on: { pull_request }
+on: 
+  pull_request:
 
 jobs:
   run-unit-tests:
@@ -15,6 +16,7 @@ jobs:
           POSTGRESQL_USERNAME: docker
           POSTGRESQL_PASSWORD: docker
           POSTGRESQL_DATABASE: apisolid
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -22,8 +24,12 @@ jobs:
           node-version: 18
           cache: 'npm'
       - run: npm ci 
-      - run: npm run test:e2e
+      - run: |
+          until nc -z localhost 5432; do
+            echo "Aguardando PostgreSQL..."
+            sleep 1
+          done
         env:
           JWT_SECRET: "jtbu1QXSc8_B33MrTS2aBvZ7A5orojO98LQvhNopG84"
-          DATABASE_URL: "postgresql://docker:docker@localhost:5432/apisolid?schema=public"
-
+          DATABASE_URL: "postgresql://docker:docker@127.0.0.1:5432/apisolid?schema=public"
+      - run: npm run test:e2e
